@@ -20,7 +20,22 @@ transform = transforms.Compose([
 #
 #train_dataset = MNIST(root='./data',train=True,download = True, transform = transform)
 #test_dataset = MNIST(root='./data',train=False,download = True, transform = transform)
+try:
+            with open("PlayerList.txt", "r") as file1:
+                full_player_list = file.read()
+            player_strings = full_player_list.split("(?<=[a-zA-Z]{3}\\d{2})")
+            self.baseball_players = [baseBallPlayer.BaseBallPlayer(info) for info in player_strings]
 
+            with open("PitcherList.txt", "r") as file2:
+                full_player_list = file.read()
+            pitcher_strings = full_player_list.split("(?<=[a-zA-Z]{3}\\d{2})")
+            self.pitchers = [pitcher.Pitcher(info) for info in pitcher_strings]
+    
+pitchers_train_dataset = MNIST(root='PlayerList.txt',train=True,download = True, transform = transform)
+pitchers_test_dataset = MNIST(root='PlayerListTest.txt',train=False,download = True, transform = transform)
+
+pitchers_train_dataset = MNIST(root='PitcherList.txt',train=True,download = True, transform = transform)
+pitchers_test_dataset = MNIST(root='PitcherListTrain.txt',train=False,download = True, transform = transform)
 
 batch_size = 64
 
