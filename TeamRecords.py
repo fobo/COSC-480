@@ -1,5 +1,6 @@
 import statsapi
 import TeamID
+import json
 
 id = TeamID.teamId()
 
@@ -37,13 +38,16 @@ def analyzeGames(games, teamID, opponentID):
     return [teamWins, oppWins]
 
 def CreateOpponentDict(teamID, seasonYear):
-    opponent_dict = {}
-    start_day, end_day = getDates(seasonYear)
-    for opponent in id.teams:
-        opponentID = id.teams[opponent]
-        if(id.teams[team] == teamID):
+    opponent_dict = {}                          #create empty dict to update
+    start_day, end_day = getDates(seasonYear)   #create date strings from season year
+    for opponent in id.teams:                   #iterating through all teams in teams list
+        opponentID = id.teams[opponent]         #getting ID of opponent for this iteration
+        if(id.teams[opponent] != teamID):           #ignoring 
             games = statsapi.schedule(start_date=start_day,end_date=end_day,team=teamID,opponent=opponentID)
-            opponent_dict.update({opponentID: analyzeGames(games, teamID, opponentID)})
+            scoreArray = analyzeGames(games, teamID, opponentID)
+            if (scoreArray == [0,0]):   #if scores for both teams is 0 then no need to store record data
+                continue
+            opponent_dict.update({opponentID: scoreArray})
     return opponent_dict
 
 def CreateRecordsDict(teamID, seasonYear):
@@ -65,9 +69,15 @@ def CreateRecordsDict(teamID, seasonYear):
 
 
 # Refer to teamId.py for team key/value pairs 
-team, teamID = getTeams()
+#team, teamID = getTeams()
 
+# generates dict for every team in season
+# maybe we write these to a big json file to grab from as this is quite slow
+seasonYear = '2015'
+for team in id.teams:
+    dict = CreateRecordsDict(id.teams[team], seasonYear)
+    json_object=json.dumps(dict, indent=3)
+    with open(f"{seasonYear}_{id.teams[team]}.json", "w") as outfile:
+        outfile.write(json_object)
+    print(dict)
 
-dict = CreateRecordsDict(teamID, '2019')
-
-print(dict)
