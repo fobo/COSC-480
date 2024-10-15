@@ -5,7 +5,15 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-data = pd.read_csv('stats.csv') #Fix once CSV data is done
+data = pd.read_csv('out.csv', encoding='ISO-8859-1')
+ #Fix once CSV data is done
+
+ 
+# Standardization
+mean_value = data['fantasy_points'].mean()
+std_value = data['fantasy_points'].std()
+
+data['normalized_fantasy_points'] = (data['fantasy_points'] - mean_value) / std_value
 
 scaler = StandardScaler()
 normalized_data = scaler.fit_transform(data[['batting_avg', 'home_runs', 'RBIs']])
@@ -26,9 +34,9 @@ class FantasyMLP(nn.Module):
         x = self.fc3(x)
         return x
     
-X = torch.tensor(normalized_data, dtype=torch.float32)
-y = torch.tensor(data['fantasy_points'].values, dtype=torch.float32).view(-1, 1)
 
+X = torch.tensor(normalized_data, dtype=torch.float32)
+y = torch.tensor(data['normalized_fantasy_points'].values, dtype=torch.float32).view(-1, 1)
 
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -39,7 +47,7 @@ criterion = nn.MSELoss()  # Use MSE for regression
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 
-num_epochs = 100
+num_epochs = 1000
 for epoch in range(num_epochs):
     model.train()
 
@@ -64,3 +72,12 @@ with torch.no_grad():
 new_data = torch.tensor([[0.300, 25, 75]], dtype=torch.float32).reshape(1, -1)
 prediction = model(new_data)
 print(f'Predicted Fantasy Points: {prediction.item():.2f}')
+print(f"Mean Value: {mean_value}")
+print(f"Stand Deviation:  {std_value}")
+
+predicted_normalized = 27.14
+mean_value = 259.41
+std_value = 198.63
+
+predicted_fantasy_points = (predicted_normalized * std_value) + mean_value
+print(predicted_fantasy_points)
