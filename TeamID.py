@@ -1,3 +1,4 @@
+#   Dictionary containing team names and relative ids for access within api
 class teamId():
     def __init__(self):
         self.teams = {
@@ -36,6 +37,9 @@ class teamId():
         for team in self.teams:
             print(f"",{team})
 
+    def getTeamIdList(self):
+        return self.teams.values()
+
     def getTeamId(self,name):
         # Input Error Checking
         if name in self.teams:
@@ -44,3 +48,7 @@ class teamId():
             print("Team Not Found. Please Try Again")
         return "Not Found"
         
+
+team = teamId()
+
+print(team.getTeamIdList())
