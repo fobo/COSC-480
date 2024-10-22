@@ -56,10 +56,13 @@ for x in range(len(teams)):
             returnString += homeruns + ", "
             returnString += RBIs + ", "
             returnString += str(score)
-            if(RBIs = "0" or batAVG = ".000" or score == 0)
-            print(returnString)
-            returnString = ""
-            score = 0
+          if(RBIs == "0" or batAVG == ".000" or score == 0):
+                returnString = ""
+                score = 0
+            else:       
+                print(returnString)
+                returnString = ""
+                score = 0
        except:
             returnString = ""
             score = 0
