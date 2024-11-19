@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
-import mlbstatsapi
+import csv
+#import mlbstatsapi
 
 class App:
     def __init__(self, root):
@@ -91,21 +92,29 @@ class PlayersPage(tk.Frame):
         entry_frame.grid(row=1, column=0, pady=10, sticky='w')
 
         # Label for entry box title
-        entry_label = tk.Label(entry_frame, text="Enter Season Year:", font=('arial', 12), bg='#FFFACD')
+        entry_label = tk.Label(entry_frame, text="Enter Player Name:", font=('arial', 12), bg='#FFFACD')
         entry_label.pack(anchor='w', padx=20)
 
+        # Frame for entry box and prediction label side by side
+        entry_prediction_frame = tk.Frame(entry_frame, bg='#FFFACD')
+        entry_prediction_frame.pack(padx=20, pady=5, fill='x')
+
         # Entry box for user input
-        self.entry_box = tk.Entry(entry_frame, font=('arial', 12))
-        self.entry_box.pack(padx=20, pady=5)
+        self.entry_box = tk.Entry(entry_prediction_frame, font=('arial', 12))
+        self.entry_box.grid(row=0, column=0, padx=10)
+
+        # Label to display the predicted fantasy score
+        self.prediction_label = tk.Label(entry_prediction_frame, text="Prediction: --", font=('arial', 12), bg='#FFFACD', anchor='w')
+        self.prediction_label.grid(row=0, column=1, padx=10)
 
         # Button to save entry box value to a variable
-        save_button = tk.Button(self, text="Load Players", bg='#FAEBD7', font=('arial', 12),
-                                command=self.save_entry_value)
+        save_button = tk.Button(self, text="Predict fantasy points", bg='#FAEBD7', font=('arial', 12),
+                                 command=self.save_entry_value)
         save_button.grid(row=2, column=0, pady=10, sticky='w', padx=20)
 
         # Back button
         back_button = tk.Button(self, text="Back to Home", bg='#FAEBD7', font=('arial', 12), height=1,
-                                command=lambda: controller.show_frame("HomePage"))
+                                 command=lambda: controller.show_frame("HomePage"))
         back_button.grid(row=3, column=1, pady=10, padx=10, sticky='se')
 
         # Configure grid columns for layout consistency
@@ -113,75 +122,102 @@ class PlayersPage(tk.Frame):
         self.grid_columnconfigure(1, weight=1)
 
     def save_entry_value(self):
-        
-        season_year = self.entry_box.get()
-        print("Player Name:", season_year)
-        teams = [
-            "Arizona Diamondbacks", "Atlanta Braves", "Baltimore Orioles", "Boston Red Sox", 
-            "Chicago White Sox", "Chicago Cubs", "Cincinnati Reds", "Cleveland Guardians", 
-            "Colorado Rockies", "Detroit Tigers", "Houston Astros", "Kansas City Royals", 
-            "Los Angeles Angels", "Los Angeles Dodgers", "Miami Marlins", "Milwaukee Brewers", 
-            "Minnesota Twins", "New York Yankees", "New York Mets", "Oakland Athletics", 
-            "Philadelphia Phillies", "Pittsburgh Pirates", "San Diego Padres", "San Francisco Giants", 
-            "Seattle Mariners", "St. Louis Cardinals", "Tampa Bay Rays", "Texas Rangers", 
-            "Toronto Blue Jays", "Washington Nationals"
-        ]
-        for z in range(len(teams)):
-            mlb  = mlbstatsapi.Mlb()
-            lions_id = mlb.get_team_id(teams[z]) #select team name
-            lions = mlb.get_team_roster(lions_id)       #grabs all player
-            returnString = ""
-            batAVG = ""
-            homeRuns = ""
-            RBIs = ""
-            score = 0
-            stats = ['season']
-            section = ['hitting']
-            params = {'season':2022}
-            for x in range(len(lions)):
-               returnString += lions[x].fullname + ", "
-               try:
-                    stats = mlb.get_player_stats(lions[x].id,['season'], ['hitting'],**{'season':season_year})
-                    expectedstats = stats['hitting']['season']
-                    for split in expectedstats.splits:
-                        for k, v in split.stat.__dict__.items():
-             #               print(k,v)
+#        import bballLSTM   
+        player_name = self.entry_box.get()
+        predicted_score = None 
+        found_player = False
 
-                            if(k == "doubles"):
-                                score += 2 * v
-                            elif(k == "triples"):
-                                 score += 3  * v
-                            elif(k == "homeruns"):
-                                score += 4 * v
-                                homeruns = str(v)
-                            elif(k == "runs"):
-                                score += 1 * v
-                            elif(k == "rbi"):
-                                score += 1 * v
-                                RBIs = str(v)
-                            elif(k == "baseonballs"):
-                                score += 1 * v
-                            elif(k == "hitbypitch"):
-                                score += 1 * v
-                            elif(k == "stolenbases"):
-                                score += 2 * v
-                            elif(k == "caugtstealing"):
-                                score -= 1 * v
-                            elif(k == "avg"):
-                                batAVG = str(v)
-                    returnString += batAVG + ", "
-                    returnString += homeruns + ", "
-                    returnString += RBIs + ", "
-                    returnString += str(score)
-                    if(RBIs == "0" or batAVG == ".000" or score == 0):
+        try:
+            # Open the CSV file
+            with open("output.csv", "r") as file:
+                csv_reader = csv.reader(file)
+                for row in csv_reader:
+                    if row[0] == player_name: 
+                        predicted_score = row[-1]  #CHANGE!! this just grabs their old value already in the csv
+                        
+                        with open("player_data.csv", "w", newline="") as new_file:
+                            csv_writer = csv.writer(new_file)
+                            csv_writer.writerow(row)  
+
+                        #^^ creates new data file with only the player passed in it
+
+                        found_player = True
                         break
-                    else:
-                        print(returnString)
-                    returnString = ""
-                    score = 0
-               except:
-                    returnString = ""
-                    score = 0
+
+            if found_player:
+                self.prediction_label.config(text=f"Prediction: {predicted_score}")
+            else:
+                self.prediction_label.config(text="Prediction: Not Found")
+        except FileNotFoundError:
+            self.prediction_label.config(text="Error: File Not Found")
+
+        # print("Player Name:", season_year)
+        # teams = [
+        #     "Arizona Diamondbacks", "Atlanta Braves", "Baltimore Orioles", "Boston Red Sox", 
+        #     "Chicago White Sox", "Chicago Cubs", "Cincinnati Reds", "Cleveland Guardians", 
+        #     "Colorado Rockies", "Detroit Tigers", "Houston Astros", "Kansas City Royals", 
+        #     "Los Angeles Angels", "Los Angeles Dodgers", "Miami Marlins", "Milwaukee Brewers", 
+        #     "Minnesota Twins", "New York Yankees", "New York Mets", "Oakland Athletics", 
+        #     "Philadelphia Phillies", "Pittsburgh Pirates", "San Diego Padres", "San Francisco Giants", 
+        #     "Seattle Mariners", "St. Louis Cardinals", "Tampa Bay Rays", "Texas Rangers", 
+        #     "Toronto Blue Jays", "Washington Nationals"
+        # ]
+        # for z in range(len(teams)):
+        #     mlb  = mlbstatsapi.Mlb()
+        #     lions_id = mlb.get_team_id(teams[z]) #select team name
+        #     lions = mlb.get_team_roster(lions_id)       #grabs all player
+        #     returnString = ""
+        #     batAVG = ""
+        #     homeRuns = ""
+        #     RBIs = ""
+        #     score = 0
+        #     stats = ['season']
+        #     section = ['hitting']
+        #     params = {'season':2022}
+        #     for x in range(len(lions)):
+        #        returnString += lions[x].fullname + ", "
+        #        try:
+        #             stats = mlb.get_player_stats(lions[x].id,['season'], ['hitting'],**{'season':season_year})
+        #             expectedstats = stats['hitting']['season']
+        #             for split in expectedstats.splits:
+        #                 for k, v in split.stat.__dict__.items():
+        #      #               print(k,v)
+
+        #                     if(k == "doubles"):
+        #                         score += 2 * v
+        #                     elif(k == "triples"):
+        #                          score += 3  * v
+        #                     elif(k == "homeruns"):
+        #                         score += 4 * v
+        #                         homeruns = str(v)
+        #                     elif(k == "runs"):
+        #                         score += 1 * v
+        #                     elif(k == "rbi"):
+        #                         score += 1 * v
+        #                         RBIs = str(v)
+        #                     elif(k == "baseonballs"):
+        #                         score += 1 * v
+        #                     elif(k == "hitbypitch"):
+        #                         score += 1 * v
+        #                     elif(k == "stolenbases"):
+        #                         score += 2 * v
+        #                     elif(k == "caugtstealing"):
+        #                         score -= 1 * v
+        #                     elif(k == "avg"):
+        #                         batAVG = str(v)
+        #             returnString += batAVG + ", "
+        #             returnString += homeruns + ", "
+        #             returnString += RBIs + ", "
+        #             returnString += str(score)
+        #             if(RBIs == "0" or batAVG == ".000" or score == 0):
+        #                 break
+        #             else:
+        #                 print(returnString)
+        #             returnString = ""
+        #             score = 0
+        #        except:
+        #             returnString = ""
+        #             score = 0
         #        print("Stats not found\n")
 
 
