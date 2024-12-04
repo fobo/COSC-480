@@ -14,8 +14,10 @@ import os
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
-# Load data
-data = pd.read_csv("downloads/baseballdata.csv") #set this to wherever your data is
+url = "https://raw.githubusercontent.com/fobo/COSC-480/refs/heads/main/baseballdata.csv"
+
+# Load data directly from GitHub raw URL
+data = pd.read_csv(url)
 
 # Normalize features
 scalers = {col: MinMaxScaler() for col in data.columns[2:]}
